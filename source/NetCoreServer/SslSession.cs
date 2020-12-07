@@ -52,10 +52,21 @@ namespace NetCoreServer
         /// </summary>
         public long BytesSent { get; private set; }
         /// <summary>
+        /// <see cref="DateTime"/> of last bytes sent by the session in UTC.
+        /// </summary>
+        public DateTime LastBytesSent { get; private set; }
+        /// <summary>
         /// Number of bytes received by the session
         /// </summary>
         public long BytesReceived { get; private set; }
-
+        /// <summary>
+        /// <see cref="DateTime"/> of last bytes received by the session in UTC.
+        /// </summary>
+        public DateTime LastBytesReceived { get; private set; }
+        /// <summary>
+        /// <see cref="DateTime"/> of last activity by session in UTC.
+        /// </summary>
+        public DateTime LastActivity => LastBytesReceived > LastBytesSent ? LastBytesReceived : LastBytesSent;
         /// <summary>
         /// Option: receive buffer size
         /// </summary>
@@ -112,7 +123,9 @@ namespace NetCoreServer
             BytesPending = 0;
             BytesSending = 0;
             BytesSent = 0;
+            LastBytesSent = DateTime.UtcNow;
             BytesReceived = 0;
+            LastBytesReceived = DateTime.UtcNow;
 
             // Update the connected flag
             IsConnected = true;
@@ -256,6 +269,7 @@ namespace NetCoreServer
 
                 // Update statistic
                 BytesSent += size;
+                LastBytesSent = DateTime.UtcNow;
                 Interlocked.Add(ref Server._bytesSent, size);
 
                 // Call the buffer sent handler
@@ -359,6 +373,7 @@ namespace NetCoreServer
                 {
                     // Update statistic
                     BytesReceived += received;
+                    LastBytesReceived = DateTime.UtcNow;
                     Interlocked.Add(ref Server._bytesReceived, received);
 
                     // Call the buffer received handler
@@ -561,6 +576,7 @@ namespace NetCoreServer
                 {
                     // Update statistic
                     BytesReceived += size;
+                    LastBytesReceived = DateTime.UtcNow;
                     Interlocked.Add(ref Server._bytesReceived, size);
 
                     // Call the buffer received handler
@@ -615,6 +631,7 @@ namespace NetCoreServer
                     // Update statistic
                     BytesSending -= size;
                     BytesSent += size;
+                    LastBytesSent = DateTime.UtcNow;
                     Interlocked.Add(ref Server._bytesSent, size);
 
                     // Increase the flush buffer offset
